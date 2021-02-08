@@ -57,6 +57,7 @@ void iOption(int argc, char **argv){
 
 		ptr = strchr(buffer, ch);
 		if ( ptr == NULL){
+			//left for testing
 			printf("i'm a system call\n");
 			system(argv[i]);
 			
@@ -140,6 +141,7 @@ int main(int argc, char *argv[], char *envp[]){
 
 			default:
 			printEnv(envp);
+			break;
 		}
 	}
 
