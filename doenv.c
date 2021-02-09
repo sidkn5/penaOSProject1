@@ -33,10 +33,105 @@ void printEnv2(){
 		printf("%s=%s\n", j, getenv(j));
 	}
 }
-//no option given, updates the environment
+//no option given, updates the environment by copying the oldenv
+//if the the name exists, replace the pointer
+//otherwise, add it as a new entry
 void noOptionUpdate(int argc, char **argv){
-	int noOfChars = 0;
-	int i = 0;
+	printf("Im on no option \n");
+
+	/*char *j;
+	char **i;
+	char cpy[10000];
+	char **newEnv = malloc(sizeof(char *) * (noOfChars + 1));
+
+	for (i = environ; i !=NULL; i++){
+		**newEnv = (char *)malloc(sizeof(char *) * (size + 1));
+
+	}*/
+
+	char **i;
+	char noOfChars = 0;
+	char noOfCharsAdded = 0;
+	for (i = environ; *i != NULL; i++){
+		noOfChars++;
+	}
+/*
+	int x = 0;
+	for(x=1; x < argc; x++){
+
+		noOfCharsAdded++;
+	}
+	printf("Old: %d\n", noOfCharsAdded);
+	*/
+	/////////////////////////////////////
+	int x = 0;
+	for (x=1; x < argc; x++){
+		char *str1 = argv[x];
+		int sizeOfStr1 = strlen(argv[x]);
+		char buffer[1];
+		strcpy(buffer, str1);
+		char *ptr;
+		int ch = '=';
+
+		ptr = strchr(buffer, ch);
+		if ( ptr == NULL){
+			//left for testing
+			//printf("i'm a system call\n");
+			//system(argv[i]);
+			
+		}else {
+			noOfCharsAdded++;
+		}
+	}
+
+	/////////////////////////////////////
+	int totalChars = 0;
+	totalChars = noOfChars + noOfCharsAdded;
+
+	char **updatedEnvironment;
+	updatedEnvironment = malloc(sizeof(char *) * (totalChars + 1));
+	if(optind < argc){
+		//copies the current environment
+		for(x=0; x < noOfChars; x++){
+			int len = strlen(environ[x]);
+			updatedEnvironment[x] = (char *)malloc(sizeof(char *)*(len + 1));
+			updatedEnvironment[x] = environ[x];
+		}
+		
+		for(x=noOfChars; x < totalChars; x++){
+			int len = strlen(argv[optind]);
+			updatedEnvironment[x] = (char *)malloc(sizeof(char *)*(len + 1));
+			updatedEnvironment[x] = argv[optind];
+			optind++;
+		}
+
+	} else {
+		printf("Please refer to ./doenv -h for proper use of program\n");
+	}
+	
+	environ = updatedEnvironment;
+	printf("Updated Environment: ");
+	printEnv2();	
+
+	
+	for (x=1; x < argc; x++){
+		char *str1 = argv[x];
+		int sizeOfStr1 = strlen(argv[x]);
+		char buffer[1];
+		strcpy(buffer, str1);
+		char *ptr;
+		int ch = '=';
+
+		ptr = strchr(buffer, ch);
+		if ( ptr == NULL){
+			printf("i'm a system call\n");
+				//int systemptr = system(argv[x-1]);
+				if((system(argv[x])) == 0){
+				}else{
+					perror("Unknown Command: No such process");
+				}
+		}
+	}
 }
 
 //ignores the current environment and replaces it with the new one
@@ -58,8 +153,8 @@ void iOption(int argc, char **argv){
 		ptr = strchr(buffer, ch);
 		if ( ptr == NULL){
 			//left for testing
-			printf("i'm a system call\n");
-			system(argv[i]);
+			//printf("i'm a system call\n");
+			//system(argv[i]);
 			
 		}else {
 			noOfChars++;
@@ -85,7 +180,7 @@ void iOption(int argc, char **argv){
 		printEnv2();
 	} else {
 		//use perror?
-		printf("An error occured.");
+		printf("An error occured. Please refer to help menu for proper use of the program.");
 	}
 	
 	for (i=2; i < argc; i++){
@@ -100,7 +195,11 @@ void iOption(int argc, char **argv){
 		ptr = strchr(buffer, ch);
 		if ( ptr == NULL){
 			printf("i'm a system call\n");
-			system(argv[i]);	
+				//int systemptr = system(argv[i]);
+				if((system(argv[i])) == 0){
+				}else{
+					perror("Unknown Command: No such process");
+				}
 		}
 	}
 }
@@ -143,7 +242,9 @@ int main(int argc, char *argv[], char *envp[]){
 			printEnv(envp);
 			break;
 		}
+
 	}
 
+		noOptionUpdate(argc, argv);
 	return 0;
 }
