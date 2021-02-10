@@ -1,17 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-extern char **environ;
 #include<getopt.h>
 #include<unistd.h>
+#include<errno.h>
+extern char **environ;
 /*
  *sources:
  *gnu.org for example of getopt
  *tutorialspoint.com for example of strtok
-
+ *makefile: cs.colby.edu/maxwell/courses/tutorials/maketutor/
+ *geeksforgeeks.com for strchr example
  * *****************************/
 
+//prints the current environment
+//this is called for ./doenv
 void printEnv(char **envp){
 	char *j;
 	char **i;
@@ -23,6 +26,8 @@ void printEnv(char **envp){
 	}
 }
 
+//the same as above but uses the environ external variable
+//this was called by the other functions for testing
 void printEnv2(){
 	char *j;
 	char **i;
@@ -33,47 +38,39 @@ void printEnv2(){
 		printf("%s=%s\n", j, getenv(j));
 	}
 }
+
 //no option given, updates the environment by copying the oldenv
-//if the the name exists, replace the pointer
+//if the the name exists, update/modify the name=var pair
 //otherwise, add it as a new entry
 void noOptionUpdate(int argc, char **argv){
-	printf("Im on no option \n");
-
-	/*char *j;
+	int x = 0;
 	char **i;
-	char cpy[10000];
-	char **newEnv = malloc(sizeof(char *) * (noOfChars + 1));
+	char noOfChars = 0;		//no. of chars of the old environment
+	char noOfCharsAdded = 0;	//no. of chars that will be added to the old environment
 
-	for (i = environ; i !=NULL; i++){
-		**newEnv = (char *)malloc(sizeof(char *) * (size + 1));
-
-	}*/
-
-	char **i;
-	char noOfChars = 0;
-	char noOfCharsAdded = 0;
 	for (i = environ; *i != NULL; i++){
 		noOfChars++;
 	}
-/*
-	int x = 0;
-	for(x=1; x < argc; x++){
-
-		noOfCharsAdded++;
-	}
-	printf("Old: %d\n", noOfCharsAdded);
-	*/
+	
 	/////////////////////////////////////
-	int x = 0;
+	//If the name exists then modify the environment
+	//otherwise increment noOfCharsAdded, for later use when adding to the environment
 	for (x=1; x < argc; x++){
 		char *str1 = argv[x];
 		int sizeOfStr1 = strlen(argv[x]);
-		char buffer[1];
-		strcpy(buffer, str1);
-		char *ptr;
-		int ch = '=';
-
-		ptr = strchr(buffer, ch);
+		int size = strlen(argv[x]);
+		char *argString = (char *)malloc(sizeof(char) * (size + 1));
+		strcpy(argString, argv[x]);
+		char *token = strtok(argString, "=");
+		if(getenv(token) != NULL){
+			putenv(argv[x]);
+		}else{
+			char buffer[1];
+			strcpy(buffer, str1);
+			char *ptr;
+			int ch = '=';
+			ptr = strchr(buffer, ch);
+			//printf("Hello\n");
 		if ( ptr == NULL){
 			//left for testing
 			//printf("i'm a system call\n");
@@ -82,15 +79,21 @@ void noOptionUpdate(int argc, char **argv){
 		}else {
 			noOfCharsAdded++;
 		}
+		
+//////////////////////////////////////////////////////////////////////////////////////////		
+					
+		
+///////////////////////////////////////////////////////////////////////////////////////////		
+		}
 	}
 
-	/////////////////////////////////////
-	int totalChars = 0;
+	
+	int totalChars = 0;		//holds the total for the updated environment
 	totalChars = noOfChars + noOfCharsAdded;
 
 	char **updatedEnvironment;
 	updatedEnvironment = malloc(sizeof(char *) * (totalChars + 1));
-	if(optind < argc){
+	if(optind < (argc)){
 		//copies the current environment
 		for(x=0; x < noOfChars; x++){
 			int len = strlen(environ[x]);
@@ -108,12 +111,18 @@ void noOptionUpdate(int argc, char **argv){
 	} else {
 		printf("Please refer to ./doenv -h for proper use of program\n");
 	}
-	
-	environ = updatedEnvironment;
-	printf("Updated Environment: ");
-	printEnv2();	
 
-	
+	updatedEnvironment[totalChars]= NULL;
+	environ = updatedEnvironment;
+
+	//printed out the updated environment for testing
+	//printf("Updated Environment: \n");
+	//printEnv2();	
+
+	//checks whether the argument is a call or a name value pair 
+	//by checking if the '=' sign is present
+	//otherwise attempt the call using system(3),
+	//if that fails then perror is displayed
 	for (x=1; x < argc; x++){
 		char *str1 = argv[x];
 		int sizeOfStr1 = strlen(argv[x]);
@@ -124,14 +133,16 @@ void noOptionUpdate(int argc, char **argv){
 
 		ptr = strchr(buffer, ch);
 		if ( ptr == NULL){
-			printf("i'm a system call\n");
-				//int systemptr = system(argv[x-1]);
 				if((system(argv[x])) == 0){
 				}else{
-					perror("Unknown Command: No such process");
+					//if the call fails, then errno is set and perror is displayed.
+					errno = 3;
+					perror("doenv: Error: Unknown Process");
 				}
 		}
 	}
+
+	free(updatedEnvironment);
 }
 
 //ignores the current environment and replaces it with the new one
@@ -140,7 +151,10 @@ void iOption(int argc, char **argv){
 	int i = 0;
 
 	//find shell command
-
+	//checks whether the argument is a call or a name value pair 
+	//by checking if the '=' sign is present
+	//otherwise attempt the call using system(3),
+	//if that fails then perror is displayed
 	for (i=2; i < argc; i++){
 		char *str1 = argv[i];
 		int x;
@@ -164,6 +178,7 @@ void iOption(int argc, char **argv){
 	char **newEnvironment = malloc(sizeof(char *) * (noOfChars + 1));
 
 
+	//opind < argc ensures that -i option is used properly
 	if(optind < argc){
 		for(i=0;i < noOfChars; i++){
 			int size = strlen(argv[i]);
@@ -175,14 +190,20 @@ void iOption(int argc, char **argv){
 
 		newEnvironment[noOfChars] = NULL;
 		environ = newEnvironment;
-	
-		printf("The new environment: \n");
-		printEnv2();
+
+		//printed the new environment for testing
+		//printf("The new environment: \n");
+		//printEnv2();
 	} else {
-		//use perror?
-		printf("An error occured. Please refer to help menu for proper use of the program.");
+		printf("Please refer to help menu for proper use of the program.\n");
+		printf("This is not an error but NOTE that the -i option can be used with name=variable arguments to change the environment.\n");
 	}
-	
+
+
+	//checks whether the argument is a call or a name value pair 
+	//by checking if the '=' sign is present
+	//otherwise attempt the call using system(3),
+	//if that fails then perror is displayed
 	for (i=2; i < argc; i++){
 		char *str1 = argv[i];
 		int x;
@@ -194,25 +215,27 @@ void iOption(int argc, char **argv){
 
 		ptr = strchr(buffer, ch);
 		if ( ptr == NULL){
-			printf("i'm a system call\n");
-				//int systemptr = system(argv[i]);
 				if((system(argv[i])) == 0){
-				}else{
-					perror("Unknown Command: No such process");
+				}else{		
+					//if the call fails, then errno is set and perror is displayed.
+					errno = 3;
+					perror("doenv: Error: Unknown Process");
 				}
 		}
 	}
+	free(newEnvironment);
+	
 }
 
-//not done
+//displays the help menu
 void help(){
 	printf("Help: \n");
 	printf("Usage: ./doenv [option] [name1=val1] ... [namen=valn] command1 ... commandn \n");
 	printf("This program behaves in the same way as the env utility when executing another program. \n");
 	printf("Example: ./doenv -i TZ=EST date\n");
 	printf("Options: \n");
-	printf("-h \t displays help information on how this program is to be called or executed\n");
-	printf("-i \t ignores the current environment and replaces it with the name=value pair entered by the user.\n");
+	printf("-h \t\t displays help information on how this program is to be called or executed\n");
+	printf("-i \t\t ignores the current environment and replaces it with the name=value pair entered by the user.\n");
 	printf("A call without arguments or an option will simply print the current evironment. \n");
 	printf("A call without an option but with name=value arguments modifies/updates the current environment. \n");
 
@@ -220,13 +243,18 @@ void help(){
 
 int main(int argc, char *argv[], char *envp[]){
 	int c = 0;
-	//1. if no options used
+	int noOptionGiven;
+	// if no options used
 	if (argc == 1){
-		printEnv(envp);
+		//printEnv(envp);
+		printEnv2();
+		return 0;
+	}else{
+		noOptionGiven=1;
 		
 	}
 
-	//
+	//options are used
 	while ((c = getopt(argc, argv,"hi:")) != -1){
 		switch (c){
 			//-i option used
@@ -239,12 +267,16 @@ int main(int argc, char *argv[], char *envp[]){
 			break;
 
 			default:
-			printEnv(envp);
+			printf("Please refer to the help menu for proper use of the program.\n");
 			break;
 		}
+		return 0;
 
 	}
 
+	//if no option is given it calls noOptionUpdate function
+	if(noOptionGiven=1){
 		noOptionUpdate(argc, argv);
+	}
 	return 0;
 }
