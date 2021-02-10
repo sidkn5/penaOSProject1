@@ -64,13 +64,15 @@ void noOptionUpdate(int argc, char **argv){
 	char noOfChars = 0;		//no. of lines of the old environment
 	char noOfCharsAdded = 0;	//no. of lines that will be added to the old environment
 
+	//counts the lines that will be copied
 	for (i=environ; *i !=NULL;i++){
 		noOfChars++;
 	}
 
 	//If the name exists then modify the environment
 	//otherwise increment noOfCharsAdded, for later use when adding to the environment
-	//strchr used to check whether the argument contains "="	
+	//strchr used to check whether the argument contains "="
+	//if it isn't then it is not treated as a name value pair
 	for (x=1; x < argc; x++){
 		char *str1 = argv[x];
 		int sizeOfStr1 = strlen(argv[x]);
@@ -92,6 +94,8 @@ void noOptionUpdate(int argc, char **argv){
 			//system(argv[i]);
 			
 		}else {
+			//if the argument contained = then it is 
+			//a name value pair so increment
 			noOfCharsAdded++;
 		}
 		}
@@ -110,7 +114,7 @@ void noOptionUpdate(int argc, char **argv){
 			updatedEnvironment[x] = (char *)malloc(sizeof(char *)*(len + 1));
 			updatedEnvironment[x] = environ[x];
 		}
-	
+		//adds to the new environment
 		for(x=noOfChars; x < totalChars; x++){
 			int len = strlen(argv[optind]);
 			updatedEnvironment[x] = (char *)malloc(sizeof(char *)*(len + 1));
@@ -159,8 +163,8 @@ void noOptionUpdate(int argc, char **argv){
 
 //ignores the current environment and replaces it with the new one
 void iOption(int argc, char **argv){
-	int noOfChars = 0;
-	int i = 0;
+	int noOfChars = 0;	
+	int i = 0;		
 
 	//find shell command
 	//checks whether the argument is a call or a name value pair 
@@ -191,6 +195,7 @@ void iOption(int argc, char **argv){
 
 	//opind < argc ensures that -i option is used properly
 	if(optind < argc){
+		//overwrites the environment with the new one
 		for(i=0;i < noOfChars; i++){
 			int size = strlen(argv[i]);
 			newEnvironment[i] = (char*)malloc(sizeof(char *) * (size + 1));			
