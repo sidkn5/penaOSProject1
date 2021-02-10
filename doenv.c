@@ -1,3 +1,15 @@
+/*
+ *Student: Sean Dela Pena
+ *Professor:Dr. Sanjiv Bhatia
+ *email:sidkn5@umsystem.edu
+ *Assignment1: Linux System Calls and Library Functions
+ *		Duplicates the env utility
+ *
+ *github: github.com/sidkn5
+ *Date: 2/9/2021
+ *
+ *
+ * */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,11 +18,12 @@
 #include<errno.h>
 extern char **environ;
 /*
- *sources:
+ *Some sources:
  *gnu.org for example of getopt
  *tutorialspoint.com for example of strtok
  *makefile: cs.colby.edu/maxwell/courses/tutorials/maketutor/
  *geeksforgeeks.com for strchr example
+ *Stackoverflow.com for errorno explanation
  * *****************************/
 
 //prints the current environment
@@ -26,9 +39,12 @@ void printEnv(char **envp){
 	}
 }
 
+//This function is not called in this program. It is ONLY
+//used for testing
 //the same as above but uses the environ external variable
 //this was called by the other functions for testing
-void printEnv2(){
+//if you want to view the environment please use the env command
+/*void printEnv2(){
 	char *j;
 	char **i;
 	char cpy[10000];
@@ -37,7 +53,7 @@ void printEnv2(){
 		j = strtok(cpy, "=");
 		printf("%s=%s\n", j, getenv(j));
 	}
-}
+}*/
 
 //no option given, updates the environment by copying the oldenv
 //if the the name exists, update/modify the name=var pair
@@ -54,7 +70,7 @@ void noOptionUpdate(int argc, char **argv){
 
 	//If the name exists then modify the environment
 	//otherwise increment noOfCharsAdded, for later use when adding to the environment
-	
+	//strchr used to check whether the argument contains "="	
 	for (x=1; x < argc; x++){
 		char *str1 = argv[x];
 		int sizeOfStr1 = strlen(argv[x]);
@@ -129,16 +145,16 @@ void noOptionUpdate(int argc, char **argv){
 
 		ptr = strchr(buffer, ch);
 		if ( ptr == NULL){
-				if((system(argv[x])) == 0){
-				}else{
+			if((system(argv[x])) == 0){
+			}else{
 					//if the call fails, then errno is set and perror is displayed.
 					errno = 3;
 					perror("doenv: Error: Unknown Process");
-				}
+			}
 		}
 	}
 
-	//free(updatedEnvironment);
+	free(updatedEnvironment);
 }
 
 //ignores the current environment and replaces it with the new one
@@ -172,7 +188,6 @@ void iOption(int argc, char **argv){
 	}
 	
 	char **newEnvironment = malloc(sizeof(char *) * (noOfChars + 1));
-
 
 	//opind < argc ensures that -i option is used properly
 	if(optind < argc){
@@ -230,10 +245,12 @@ void help(){
 	printf("This program behaves in the same way as the env utility when executing another program. \n");
 	printf("Example: ./doenv -i TZ=EST date\n");
 	printf("Options: \n");
-	printf("-h \t\t displays help information on how this program is to be called or executed\n");
-	printf("-i \t\t ignores the current environment and replaces it with the name=value pair entered by the user.\n");
-	printf("A call without arguments or an option will simply print the current evironment. \n");
+	printf("-h \t\t displays help information on how this program is to be called or executed\n\n");
+	printf("-i \t\t ignores the current environment and replaces it with the name=value pair entered by the user.\n\n");
+	printf("A call without arguments or options will simply print the current evironment. \n");
 	printf("A call without an option but with name=value arguments modifies/updates the current environment. \n");
+	printf("If the name already exists in the current environment then it is modified. \n");
+	printf("If the name does not exists then it will be added to the current environment \n");
 
 }
 
@@ -242,8 +259,7 @@ int main(int argc, char *argv[], char *envp[]){
 	int noOptionGiven;
 	// if no options used
 	if (argc == 1){
-		//printEnv(envp);
-		printEnv2();
+		printEnv(envp);
 		return 0;
 	}else{
 		noOptionGiven=1;
@@ -253,7 +269,6 @@ int main(int argc, char *argv[], char *envp[]){
 	//options are used
 	while ((c = getopt(argc, argv,"hi:")) != -1){
 		switch (c){
-			//-i option used
 			case 'i':
 			iOption(argc, argv);
 			break;
