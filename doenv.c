@@ -45,16 +45,16 @@ void printEnv2(){
 void noOptionUpdate(int argc, char **argv){
 	int x = 0;
 	char **i;
-	char noOfChars = 0;		//no. of chars of the old environment
-	char noOfCharsAdded = 0;	//no. of chars that will be added to the old environment
+	char noOfChars = 0;		//no. of lines of the old environment
+	char noOfCharsAdded = 0;	//no. of lines that will be added to the old environment
 
-	for (i = environ; *i != NULL; i++){
+	for (i=environ; *i !=NULL;i++){
 		noOfChars++;
 	}
-	
-	/////////////////////////////////////
+
 	//If the name exists then modify the environment
 	//otherwise increment noOfCharsAdded, for later use when adding to the environment
+	
 	for (x=1; x < argc; x++){
 		char *str1 = argv[x];
 		int sizeOfStr1 = strlen(argv[x]);
@@ -70,7 +70,6 @@ void noOptionUpdate(int argc, char **argv){
 			char *ptr;
 			int ch = '=';
 			ptr = strchr(buffer, ch);
-			//printf("Hello\n");
 		if ( ptr == NULL){
 			//left for testing
 			//printf("i'm a system call\n");
@@ -79,17 +78,12 @@ void noOptionUpdate(int argc, char **argv){
 		}else {
 			noOfCharsAdded++;
 		}
-		
-//////////////////////////////////////////////////////////////////////////////////////////		
-					
-		
-///////////////////////////////////////////////////////////////////////////////////////////		
 		}
 	}
 
 	
 	int totalChars = 0;		//holds the total for the updated environment
-	totalChars = noOfChars + noOfCharsAdded;
+	totalChars = noOfChars + noOfCharsAdded +1;
 
 	char **updatedEnvironment;
 	updatedEnvironment = malloc(sizeof(char *) * (totalChars + 1));
@@ -100,14 +94,16 @@ void noOptionUpdate(int argc, char **argv){
 			updatedEnvironment[x] = (char *)malloc(sizeof(char *)*(len + 1));
 			updatedEnvironment[x] = environ[x];
 		}
-		
+	
 		for(x=noOfChars; x < totalChars; x++){
 			int len = strlen(argv[optind]);
 			updatedEnvironment[x] = (char *)malloc(sizeof(char *)*(len + 1));
 			updatedEnvironment[x] = argv[optind];
-			optind++;
+			optind++;;
+			
 		}
-
+		
+		
 	} else {
 		printf("Please refer to ./doenv -h for proper use of program\n");
 	}
@@ -142,7 +138,7 @@ void noOptionUpdate(int argc, char **argv){
 		}
 	}
 
-	free(updatedEnvironment);
+	//free(updatedEnvironment);
 }
 
 //ignores the current environment and replaces it with the new one
@@ -183,7 +179,7 @@ void iOption(int argc, char **argv){
 		for(i=0;i < noOfChars; i++){
 			int size = strlen(argv[i]);
 			newEnvironment[i] = (char*)malloc(sizeof(char *) * (size + 1));			
-			newEnvironment[i] = argv[optind-1];
+			newEnvironment[i] = argv[optind - 1];
 			optind++;
 			
 		}
